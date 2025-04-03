@@ -1,0 +1,68 @@
+name: Build Manjaro WSL Image
+
+on:
+  schedule:
+    - cron: "0 0 1 * *" # 毎月1日に実行
+  workflow_dispatch: # 手動でワークフローを実行できるようにする
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          load: true
+          tags: manjaro-wsl:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Export Docker image as tar
+        run: |
+          container_id=$(docker create manjaro-wsl:latest)
+          docker export $container_id -o manjaro-wsl.tar
+          docker rm $container_id
+          # Check tar file size
+          ls -lh manjaro-wsl.tar
+
+      - name: Compress tar file
+        run: gzip -9 manjaro-wsl.tar
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: manjaro-wsl.tar.gz
+          name: Manjaro WSL Image ${{ steps.date.outputs.date }}
+          tag_name: manjaro-wsl-${{ steps.date.outputs.date }}
+          body: |
+            Manjaro WSL Image ${{ steps.date.outputs.date }}
+
+            ### Installation
+            1. Extract the downloaded .tar.gz file:
+            ```
+            gzip -d manjaro-wsl.tar.gz
+            ```
+
+            2. Import to WSL with PowerShell:
+            ```powershell
+            wsl --import ManjaroWSL C:\path\to\store C:\path\to\manjaro-wsl.tar
+            ```
+
+            3. Launch the new distribution:
+            ```powershell
+            wsl -d ManjaroWSL
+            ```
+          draft: false
+          prerelease: false
