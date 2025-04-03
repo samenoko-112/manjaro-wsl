@@ -3,7 +3,7 @@ FROM manjarolinux/base:latest
 ARG BUILDERNAME=builder
 ARG USERNAME=manjaro
 
-RUN pacman-mirrors -c United_States\
+RUN pacman-mirrors -c Japan,United_States\
     && pacman -Sy\
     && pacman -Syu --noconfirm --needed git sudo wget nano go base-devel
 RUN usermod -l ${USERNAME} ${BUILDERNAME}\

@@ -2,8 +2,8 @@ name: Build Manjaro WSL Image
 
 on:
   schedule:
-    - cron: "0 0 1 * *" # 毎月1日に実行
-  workflow_dispatch: # 手動でワークフローを実行できるようにする
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -36,31 +36,23 @@ jobs:
           # Check tar file size
           ls -lh manjaro-wsl.tar
 
-      - name: Compress tar file
-        run: gzip -9 manjaro-wsl.tar
-
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          files: manjaro-wsl.tar.gz
+          files: manjaro-wsl.tar
           name: Manjaro WSL Image ${{ steps.date.outputs.date }}
           tag_name: manjaro-wsl-${{ steps.date.outputs.date }}
           body: |
             Manjaro WSL Image ${{ steps.date.outputs.date }}
 
             ### Installation
-            1. Extract the downloaded .tar.gz file:
-            ```
-            gzip -d manjaro-wsl.tar.gz
-            ```
-
-            2. Import to WSL with PowerShell:
+            1. Import to WSL with PowerShell:
             ```powershell
             wsl --import ManjaroWSL C:\path\to\store C:\path\to\manjaro-wsl.tar
             ```
 
-            3. Launch the new distribution:
+            2. Launch the new distribution:
             ```powershell
             wsl -d ManjaroWSL
             ```
