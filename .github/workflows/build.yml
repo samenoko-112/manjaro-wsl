@@ -31,16 +31,15 @@ jobs:
       - name: Export Docker image as tar
         run: |
           container_id=$(docker create manjaro-wsl:latest)
-          docker export $container_id -o manjaro-wsl.tar
+          docker export $container_id -o manjaro-wsl.tar.gz
           docker rm $container_id
-          # Check tar file size
-          ls -lh manjaro-wsl.tar
+          echo "TAR_SIZE=$(du -h manjaro-wsl.tar.gz | cut -f1)" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: manjaro-wsl.tar
+          files: manjaro-wsl.tar.gz
           name: Manjaro WSL Image ${{ steps.datetime.outputs.datetime }}
           tag_name: manjaro-wsl-${{ steps.datetime.outputs.datetime }}
           body: |
@@ -49,7 +48,7 @@ jobs:
             ### Installation
             1. Import to WSL with PowerShell:
             ```powershell
-            wsl --import ManjaroWSL C:\path\to\store C:\path\to\manjaro-wsl.tar
+            wsl --import ManjaroWSL C:\path\to\store C:\path\to\manjaro-wsl.tar.gz
             ```
 
             2. Launch the new distribution:
